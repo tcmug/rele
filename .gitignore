@@ -1,0 +1,7 @@
+# Binaries
+rele
+tmp
+*.so
+routes/tmp
+# Generatables
+doc
