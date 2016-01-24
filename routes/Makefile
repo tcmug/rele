@@ -3,7 +3,7 @@ INCLUDEDIR = ../src
 CC = g++
 CFLAGS = -std=c++11 -Wall -O2 -g $(INC) -I $(INCLUDEDIR)
 STATICLIBS =
-LIBS = -L/Users/tcmug/Dev/luas/lib -lpthread -lrele
+LIBS = -L../lib -lpthread -lrele
 LDFLAGS	= -shared $(LIBS) $(STATICLIBS)
 
 all: myroute.so

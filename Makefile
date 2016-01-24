@@ -5,7 +5,7 @@ CC = g++
 CFLAGS = -std=c++11 -Wall -O2 -g $(INC)
 # -I $(INCLUDEDIR)
 STATICLIBS =
-LIBS = -L/Users/tcmug/Dev/luas/lib -lpthread
+LIBS = -L./lib -lpthread
 
 LDFLAGS	= $(LIBS) $(STATICLIBS)
 
@@ -85,4 +85,4 @@ docs:
 	mkdir -p doc/html && naturaldocs -i src -o HTML doc/html -p doc
 
 clean:
-	rm -f rele doc tmp/* lib/*
+	rm -rf rele doc tmp/* lib/*
