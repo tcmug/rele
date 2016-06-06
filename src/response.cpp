@@ -36,7 +36,7 @@ const std::string &response::get_status() const {
 }
 
 const std::string &response::get_header_string(const std::string &string, const std::string &default_value) const {
-	std::map <std::string, std::string>::const_iterator i = this->header.find(string);
+	auto i = this->header.find(string);
 	if (i != this->header.end()) {
 		return i->second;
 	}
@@ -46,7 +46,7 @@ const std::string &response::get_header_string(const std::string &string, const 
 
 
 int response::get_header_int(const std::string &string, int default_value) const {
-	std::map <std::string, std::string>::const_iterator i = this->header.find(string);
+	auto i = this->header.find(string);
 	if (i != this->header.end()) {
 		try {
 			return std::stoi(i->second);
@@ -62,7 +62,7 @@ response::operator std::string() {
 
 	std::string headers_string = this->protocol + " " + this->status + "\r\n";
 
-	std::map <std::string, std::string>::const_iterator i = this->header.begin();
+	auto i = this->header.begin();
 	while (i != this->header.end()) {
 		headers_string += i->first + ": " + i->second + "\r\n";
 		i++;

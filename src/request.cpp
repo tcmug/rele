@@ -58,7 +58,7 @@ const std::string &request::get_method() const {
 
 
 const std::string &request::get_header_string(const std::string &string, const std::string &default_value) const {
-	std::map <std::string, std::string>::const_iterator i = this->header.find(string);
+	auto i = this->header.find(string);
 	if (i != this->header.end()) {
 		return i->second;
 	}
