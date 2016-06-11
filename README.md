@@ -23,5 +23,4 @@ For this you need to have installed http://naturaldocs.org/
 ---
 
 Oh! Note that there are quite a few quirks, this is due to the fact that I've
-ported this a couple of times over the years (c -> c++ -> c++11), this is most
-visible in server_thread::client_handler(). Good luck rewriting that S.O.B...
+ported this a couple of times over the years (c -> c++ -> c++11).

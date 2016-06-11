@@ -13,6 +13,9 @@ namespace rele {
 */
 class request {
 
+	friend class server_thread;
+
+
 	private:
 
 		/*
@@ -31,7 +34,6 @@ class request {
 			Variable: method
 			The request method.
 		*/
-
 		std::string method;
 
 		/*
@@ -39,6 +41,12 @@ class request {
 			The query string
 		*/
 		std::string query;
+
+		/*
+			Variable: header
+			The query parameters
+		*/
+		std::string parameters;
 
 	public:
 
@@ -65,6 +73,24 @@ class request {
 				The query string
 		*/
 		const std::string &get_query() const;
+
+		/*
+			Function: set_parameters
+			Set the parameters part for this request
+
+			Parameters:
+				str - The parameters string
+		*/
+		void set_parameters(const std::string &str);
+
+		/*
+			Function: get_parameters
+			Get the parameters part for this request
+
+			Returns:
+				The parameters string
+		*/
+		const std::string &get_parameters() const;
 
 		/*
 			Function: set_header
@@ -138,8 +164,12 @@ class request {
 		*/
 		int get_header_int(const std::string &header, int default_value) const;
 
-};
 
+		/*
+
+		*/
+		operator std::string();
+};
 
 }
 

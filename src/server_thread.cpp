@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <sstream>
 
 #include "server_process.hpp"
 #include "server_thread.hpp"
@@ -14,26 +15,7 @@
 using namespace rele;
 
 
-// Constant: STATE_REQUEST
-// Request scanner is scanning the request.
-#define STATE_REQUEST	(0)
-
-// Constant: STATE_HEADERS
-// Request scanner is scanning the headers.
-#define STATE_HEADERS	(1)
-
-// Constant: STATE_DATA
-// Request scanner is scanning the data.
-#define STATE_DATA		(2)
-
-// Constant: STATE_DELIVER
-// Request scanner is ready to deliver data.
-#define STATE_DELIVER	(3)
-
-
-#define HASH_START (5381)
-#define MAX_PATH_LENGTH (2048)
-
+std::mutex log_mutex;
 
 /**
  * Create a new server thread object
@@ -42,8 +24,7 @@ server_thread::server_thread(): thread() {
 
 	this->has_connection = false;
 	this->alive = 1;
-	this->buffer = new byte_buffer();
-
+	this->buffer = new byte_buffer(1024); // 1MB
 
 }
 
@@ -118,242 +99,135 @@ router *get_router_instance() {
 }
 
 
+// Helper function for reading data to the buffer from the socket.
+int buffer_read_socket(std::vector <char> &buffer, rele::net_socket &socket) {
+	int size = buffer.size();
+	buffer.resize(buffer.capacity());
+	int read = socket.read(&buffer[0], buffer.capacity());
+	if (read >= 0) {
+		buffer.resize(size + read);
+	}
+	return read;
+	//std::cout << read << " = " <<  buffer.size() << "/" << buffer.capacity() << std::endl;
+}
+
+
+// Helper function for shifting the buffer by the given amount.
+int buffer_shift(std::vector <char> &buffer, int amount) {
+	buffer.erase(buffer.begin(), buffer.begin() + amount);
+	//std::cout << -amount << " = " <<  buffer.size() << "/" << buffer.capacity() << std::endl;
+}
+
+// Helper function for reading a single ASCII line from the buffer.
+std::string buffer_read_line(std::vector <char> &buffer, rele::net_socket &client_socket) {
+
+	// Will return or throw an exception
+	while (true) {
+		// Scan the end of the line as well as invalid characters.
+		for (std::vector <char>::iterator i = buffer.begin(); i < buffer.end(); i++) {
+			if (*i == '\n') {
+				std::string line(buffer.begin(), i - 1);
+				buffer_shift(buffer, (i - buffer.begin()) + 1);
+				return line;
+			}
+			else if (*i <= 0) {
+				throw "400 Bad Request";
+			}
+		}
+		if (buffer_read_socket(buffer, client_socket) <= 0) {
+			throw "400 Bad Request";
+		}
+	}
+}
+
 
 void server_thread::client_handler() {
 
-	if (!this->client_socket.is_valid()) {
-		//
-	}
-
-	// Generic scan variables
-	char *start = 0;
-	char *at    = this->buffer->data;
-
-	// Header vars
-	char *colon = 0;
-	char *value = 0;
-
-	// Request vars
-	char *path = 0;
-
-	int bytes_done = 0;
-	int state = STATE_REQUEST;
-	int connection_close = 1;
-	int content_length = 0;
-	unsigned long header_key_hash;
-
 	request req;
 
-	while (this->buffer->read_socket(this->client_socket)) {
+	try {
 
-		char *end = &this->buffer->data[this->buffer->used];
-		bytes_done = 0;
+		std::vector <char> buffer;
+		buffer.reserve(1024 * 1024);
+		std::string line = buffer_read_line(buffer, client_socket);
 
-		// Loop through received data
-		while (state == STATE_DELIVER || at < end) {
+		std::cout << line << std::endl;
 
-			//assert(at >= this->buffer->data);
+		// Read request headers.
 
-			switch (state) {
+		std::istringstream iss(line);
+		std::vector <std::string> split_line {
+			std::istream_iterator<std::string>{iss},
+			std::istream_iterator<std::string>{}
+		};
 
-				case STATE_REQUEST:
-					// Scan METHOD PATH AND PROTOCOL:
-					// method path proto
-					switch (*at) {
+		if (split_line.size() != 3) {
+			throw "400 Bad Request";
+		}
 
-						case '\r':
-							// Ignore \r
-						break;
+		req.set_method(split_line[0]);
+		req.set_query(split_line[1]);
+		req.set_protocol(split_line[2]);
 
-						case '\n':
+		// Read headers.
 
-							*(at-1) = 0; // Add line end
+		while (true) {
 
-							req.set_protocol(start);
+			std::string line = buffer_read_line(buffer, client_socket);
 
-							bytes_done = (at + 1) - this->buffer->data;
-							state = STATE_HEADERS;
-							start = 0;
-							colon = 0;
-							value = 0;
+			// Headers part ends with an empty line.
 
-							header_key_hash = HASH_START;
-
-							if (at - path > 100) {
-								char str[2000];
-								const char *data = "414 Request-URI Too Long";
-								sprintf(str, "HTTP/1.1 %s\r\nContent-Type: text/html\r\nContent-Length: %lu\r\n\r\n%s", "414 Request-URI Too Long", strlen(data), data);
-								this->client_socket << str;
-							}
-
-							req.set_query(path);
-						break;
-
-						case ' ':
-							*at = 0;
-							if (req.get_method().empty()) {
-								// Grab method.
-								path = at + 1;
-								req.set_method(start);
-								start = 0;
-							} else {
-								start = at+1;
-							}
-						break;
-
-						default:
-							if (start == 0) {
-								start = at;
-							}
-						break;
-					}
+			if (line.length() == 0) {
 				break;
-
-				case STATE_HEADERS:
-					// Scan headers:
-					// Header: Some value
-					switch (*at) {
-
-						case '\r':
-							// Ignore \r
-						break;
-
-						case ':':
-							// Store colon position
-							if (!colon && !value) {
-								colon = at;
-							}
-						break;
-
-						case '\n':
-							// We hit end of line
-							if (start) {
-
-								// Line was completed
-								*(at-1) = 0; // Add string end at the end of the line
-
-								// since line ending is "\r\n", -1 means at the position of \r
-								bytes_done = (at + 1) - this->buffer->data;
-
-								req.set_header(start, value);
-
-								header_key_hash = HASH_START;
-
-							} else {
-
-								// Second consequetive \n
-
-								// Connection keep alive
-								std::string str = req.get_header_string( "Connection", "" );
-								if ( str == "keep-alive" ) {
-									connection_close = 0;
-								}
-
-								// Get content type
-								str = req.get_header_string( "Content-Type", "text/html" );
-								content_length = req.get_header_int( "Content-Length", 0 );
-
-								// Second consequetive \n end of headers.
-								if (content_length == 0) {
-									// There is no content - skip to deliver content
-									state = STATE_DELIVER;
-								} else {
-									// Theres some content - continue to read it
-									state = STATE_DATA;
-								}
-
-							}
-
-							// Start scanning another header line (unless state has changed)
-							start = 0;
-							colon = 0;
-							value = 0;
-						break;
-
-						default:
-							// Treat any other characters as data
-							if (start == 0) {
-								start = at;
-							}
-							if (colon) {
-								if (*at != ' ') {
-									*colon = 0; // Add line end at colon to separate it properly
-									colon = 0;
-									value = at;
-								}
-							}
-							// colon is 0 and value is 0 when scanning key from headers
-							else if (!value) {
-								// Calculate hash for the header key
-								int c = *at;
-								header_key_hash = ((header_key_hash << 5) + header_key_hash) + c;
-
-							}
-						break;
-					}
-				break;
-
-				case STATE_DATA: // CONTENT
-					{
-					// Calculate bytes done
-					content_length -= end - at;
-					// *at = 0;
-					// std::cout << at << std::endl;
-					at = end - 1;
-					bytes_done = this->buffer->used;
-
-					if (content_length == 0) {
-						state = STATE_DELIVER;
-					}
-				}
-				break;
-
-				case STATE_DELIVER: {
-
-					this->respond(&req);
-
-					start = 0;
-					colon = 0;
-					value = 0;
-					path = 0;
-
-					state = STATE_REQUEST;
-
-					// Clean the whole request
-					bytes_done = this->buffer->used;
-					at = this->buffer->data + bytes_done - 1;
-
-					req.reset();
-
-				}
-				break;
-
 			}
 
-			at++;
+			// Split the string in to key and value.
 
-		} // Loop through received data
+			std::string key;
+			std::string value;
+			int colon = line.find(":");
+			key = line.substr(0, colon);
+			if (colon != std::string::npos) {
+			  value = line.substr(colon + 2);
+			}
 
-		if (bytes_done > 0) {
-			this->buffer->shift(bytes_done);
-			at -= bytes_done;
-			if (start) {
-				start -= bytes_done;
+			req.set_header(key, value);
+		}
+
+		// Read request data.
+
+		int content_length = req.get_header_int("Content-Length", 0);
+
+		while (content_length > 0) {
+			int size = buffer.size();
+			content_length -= size;
+			//std::cout << "remaining: " << content_length << std::endl;
+			buffer_shift(buffer, size);
+			if (content_length > 0 && buffer.empty()) {
+				if (buffer_read_socket(buffer, client_socket) == 0) {
+					throw "400 Bad Request";
+				}
 			}
 		}
 
-		if (connection_close == 1) {
-			break;
-		}
+		this->respond(&req);
 
+		buffer_shift(buffer, buffer.size());
+		req.reset();
+
+	}
+	catch (const char *error) {
+		char str[2000];
+		sprintf(str, "HTTP/1.1 %s\r\nContent-Type: text/html\r\nContent-Length: %lu\r\n\r\n%s", error, strlen(error), error);
+		this->client_socket << str;
 	}
 
 	this->client_socket.close();
+
 }
 
 
 
-std::mutex log_mutex;
 
 // Respond to request
 //
@@ -376,7 +250,7 @@ void server_thread::respond(request *req) {
 
 	// Log this request.
 	log_mutex.lock();
-	std::cout << req->get_protocol() << " " << req->get_method() << " " << req->get_query() << " ::: " << res.get_status() << std::endl;
+	std::cout << req->get_protocol() << " " << req->get_method() << " " << req->get_query() << " | " << req->get_parameters() << " ::: " << res.get_status() << std::endl;
 	log_mutex.unlock();
 
 	// Push out the reply.

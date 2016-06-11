@@ -12,7 +12,7 @@
 
 
 void intHandler(int n) {
-	rele::logger::get_instance()->log_error("Quitting...");
+	rele::logger::get_instance()->error("Quitting...");
 	exit(0);
 }
 
@@ -29,7 +29,7 @@ void intHandler(int n) {
 int main(int argc, char *argv[]) {
 
 	if (argc < 2) {
-		rele::logger::get_instance()->log_error("ERROR, no port provided");
+		rele::logger::get_instance()->error("ERROR, no port provided");
 		exit(1);
 	}
 

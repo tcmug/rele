@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <netinet/tcp.h>
 #include <string.h>
+#include <poll.h>
 
 #include "socket.hpp"
 
@@ -77,6 +78,15 @@ void net_socket::listen(const std::string &hostname, int port) {
 		throw;
 	}
 
+	struct timeval tv;
+
+	tv.tv_sec = 1;  /* 30 Secs Timeout */
+	tv.tv_usec = 0;  // Not init'ing this can cause strange errors
+
+	if (setsockopt(this->_socket->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
+		throw;
+	}
+
 	//this->set_reuse_addr(1);
 	this->set_tcp_nodelay(1);
 
@@ -110,6 +120,15 @@ net_socket net_socket::accept() {
 		(sockaddr*)&new_sock._socket->address,
 		&len
 	);
+
+	// struct timeval tv;
+
+	// tv.tv_sec = 1;  /* 30 Secs Timeout */
+	// tv.tv_usec = 0;  // Not init'ing this can cause strange errors
+
+	// if (setsockopt(new_sock._socket->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
+	// 	throw;
+	// }
 
 	return new_sock;
 }
@@ -155,8 +174,8 @@ int net_socket::write(const std::string &data) {
 }
 
 
-
 int net_socket::read(char *buffer, int len) {
-	return ::read(this->_socket->socket, buffer, len);
+	return ::read(_socket->socket, buffer, len);
 }
+
 

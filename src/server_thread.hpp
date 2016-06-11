@@ -89,6 +89,9 @@ class server_thread: rele::thread {
 		*/
 		void respond(request *req);
 
+		char *read_request(char *at);
+		char *scan_headers(char *at, std::map <std::string, std::string> &headers);
+
 	public:
 
 		/*

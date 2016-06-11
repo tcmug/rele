@@ -11,7 +11,7 @@ logger *logger::main_logger = NULL;
 
 
 logger::logger() {
-	this->log("Logging to stdout/stderr	");
+	this->info("Logging to stdout/stderr");
 }
 
 
@@ -24,14 +24,14 @@ logger *logger::get_instance() {
 }
 
 
-void logger::log(const std::string &ln) {
+void logger::info(const std::string &ln) {
 	std::lock_guard<std::mutex> lock(mtx);
 	std::cout << ln << std::endl;
 }
 
 
 
-void logger::log_error(const std::string &ln) {
+void logger::error(const std::string &ln) {
 	std::lock_guard<std::mutex> lock(mtx);
 	std::cerr << "!! ERROR: " << ln << std::endl;
 }

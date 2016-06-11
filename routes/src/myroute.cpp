@@ -38,7 +38,11 @@ class my_route: public route {
 			this->x++;
 			this->str += std::to_string(this->x);
 			this->str += ", Roger! Ain't that nice!...";
-
+			this->str = "<form method='post' enctype='multipart/form-data'>\
+				<input type='text' name='text' value='random'/>\
+				<input type='file' name='file'/>\
+				<input type='submit' value='x'/>\
+				</form>";
 			res->set_header("Content-Type", "text/html");
 			res->set_header("Content-Length", std::to_string(this->str.length()));
 

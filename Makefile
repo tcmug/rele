@@ -7,7 +7,7 @@ CFLAGS = -std=c++11 -Wall -O2 -g $(INC)
 STATICLIBS =
 LIBS = -L./lib -lpthread
 
-LDFLAGS	= $(LIBS) $(STATICLIBS)
+LDFLAGS	= -g $(LIBS) $(STATICLIBS)
 
 EXEFLAGS = -lrele
 LIBFLAGS = -shared

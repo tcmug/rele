@@ -22,7 +22,7 @@ server_process::server_process(int port) {
 	this->threads_active.reserve(this->thread_pool_size);
 	this->threads_passive.reserve(this->thread_pool_size);
 
-	rele::logger::get_instance()->log("Starting server...");
+	rele::logger::get_instance()->info("Starting server...");
 }
 
 server_process::~server_process() {

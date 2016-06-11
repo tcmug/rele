@@ -157,6 +157,7 @@ class net_socket {
 		*/
 		void set_tcp_nodelay(int val);
 
+
 };
 
 }; // Namespace

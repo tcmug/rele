@@ -72,6 +72,7 @@ class byte_buffer {
 			Amount of bytes used currently
 		*/
 		int used;
+
 };
 
 }

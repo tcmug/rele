@@ -24,12 +24,11 @@ byte_buffer::~byte_buffer() {
 }
 
 
-
 bool byte_buffer::read_socket(rele::net_socket &socket) {
 	assert(this->size >= this->used);
 	this->last_read = socket.read(&this->data[this->used], this->size - this->used);
 	this->used += this->last_read;
-	return this->last_read != -1 && this->last_read > 0;
+	return this->last_read != -1 && this->last_read >= 0;
 }
 
 

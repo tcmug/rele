@@ -44,15 +44,15 @@ bool dynamic_source::state_changed() {
 
 	if (this->state == 1) {
 
-		rele::logger::get_instance()->log("I'm the compiling thread!");
+		rele::logger::get_instance()->info("I'm the compiling thread!");
 
 		if (this->lib_handle > 0) {
-			rele::logger::get_instance()->log("Waiting for others to stop using the library.");
+			rele::logger::get_instance()->info("Waiting for others to stop using the library.");
 			std::unique_lock<std::mutex> lck(this->reference_m);
 			reference_cv.wait(lck, [this] { return this->reference_count == 0; });
 
 			dlclose(this->lib_handle);
-			rele::logger::get_instance()->log("Unloaded!");
+			rele::logger::get_instance()->info("Unloaded!");
 			this->lib_handle = 0;
 		}
 
@@ -64,11 +64,11 @@ bool dynamic_source::state_changed() {
 
 		this->lib_handle = dlopen(this->lib.c_str(), RTLD_NOW);
 		if (this->lib_handle == NULL){
-			rele::logger::get_instance()->log_error(std::string("Compilation error: ") + this->lib);
+			rele::logger::get_instance()->error(std::string("Compilation error: ") + this->lib);
 			exit(1);
 		}
 
-		rele::logger::get_instance()->log(std::string("Library loaded: ") + this->lib);
+		rele::logger::get_instance()->info(std::string("Library loaded: ") + this->lib);
 
 		this->state = 0;
 
@@ -76,7 +76,7 @@ bool dynamic_source::state_changed() {
 
 	}
 
-	//rele::logger::get_instance()->log(std::string("State OK for ") + this->lib);
+	//rele::logger::get_instance()->info(std::string("State OK for ") + this->lib);
 
 	return false;
 }

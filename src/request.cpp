@@ -11,6 +11,7 @@ using namespace rele;
 void request::reset() {
 	this->header.clear();
 	this->query.clear();
+	this->parameters.clear();
 	this->method.clear();
 	this->protocol.clear();
 }
@@ -25,6 +26,18 @@ void request::set_query(const std::string &str) {
 const std::string &request::get_query() const {
 	return this->query;
 }
+
+
+
+void request::set_parameters(const std::string &str) {
+	this->parameters = str;
+}
+
+
+const std::string &request::get_parameters() const {
+	return this->parameters;
+}
+
 
 
 
@@ -68,7 +81,7 @@ const std::string &request::get_header_string(const std::string &string, const s
 
 
 int request::get_header_int(const std::string &string, int default_value) const {
-	std::map <std::string, std::string>::const_iterator i = this->header.find(string);
+	auto i = this->header.find(string);
 	if (i != this->header.end()) {
 		try {
 			return std::stoi(i->second);
@@ -76,5 +89,20 @@ int request::get_header_int(const std::string &string, int default_value) const 
 		}
 	}
 	return default_value;
+}
+
+
+
+request::operator std::string() {
+
+	std::string headers_string = this->method + " " + this->query + " " + this->protocol + "\r\n";
+
+	auto i = this->header.begin();
+	while (i != this->header.end()) {
+		headers_string += i->first + ": " + i->second + "\r\n";
+		i++;
+	}
+
+	return headers_string + "\r\n";
 }
 

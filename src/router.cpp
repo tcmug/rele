@@ -12,11 +12,11 @@ void router::add_route(route *r) {
 
 
 const char *router::route_request(const request *req, response *res) {
-	for (auto i = this->routes.begin(); i != this->routes.end(); i++) {
-		if (std::regex_match(req->get_query(), i->first)) {
-			i->second->lock_source();
-			const char *data = i->second->process(req, res);
-			i->second->unlock_source();
+	for (const auto &i : this->routes) {	
+		if (std::regex_match(req->get_query(), i.first)) {
+			i.second->lock_source();
+			const char *data = i.second->process(req, res);
+			i.second->unlock_source();
 			return data;
 		}
 	}
@@ -25,9 +25,9 @@ const char *router::route_request(const request *req, response *res) {
 
 
 route *router::get_route_by_pattern(const char *pattern) {
-	for (auto i = this->routes.begin(); i != this->routes.end(); i++) {
-		if (strcmp(i->second->get_pattern(), pattern) == 0) {
-			return i->second;
+	for (const auto &i : this->routes) {
+		if (strcmp(i.second->get_pattern(), pattern) == 0) {
+			return i.second;
 		}
 	}
 	return 0;
