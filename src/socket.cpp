@@ -14,13 +14,12 @@ using namespace rele;
 
 #include <assert.h>
 
-// Signal struct
-//
-//
+
 struct net_socket::s_socket {
 	int socket;
 	int port;
 	socklen_t clilen;
+	struct hostent *host;
 	struct sockaddr_in address;
 };
 
@@ -143,13 +142,40 @@ bool net_socket::is_valid() {
 
 bool net_socket::connect(const std::string &hostname, int port) {
 
-	this->_socket->socket = ::socket(AF_INET, SOCK_STREAM, 0);
-	if (this->_socket->socket < 0) {
+	_socket->socket = ::socket(AF_INET, SOCK_STREAM, 0);
+	if (_socket->socket < 0) {
 		return false;
 	}
 
-	this->_socket->port = port;
-	//this->_socket->hostname = hostname;
+	if ((_socket->host = gethostbyname(hostname.c_str())) == NULL) {
+		close();
+		return false;
+	}
+
+	// struct in_addr **addr_list;
+	// int i;
+	// char ip[100];
+
+	// addr_list = (struct in_addr **) _socket->host->h_addr_list;
+
+	// for (i = 0; addr_list[i] != NULL; i++) {
+	// 	strcpy(ip, inet_ntoa(*addr_list[i]));
+	// }
+
+
+	_socket->port = port;
+
+	bzero((char *) &_socket->address, sizeof(_socket->address));
+
+	_socket->address.sin_family = AF_INET;
+	_socket->address.sin_addr.s_addr = *(long*)(_socket->host->h_addr);
+	_socket->address.sin_port = htons(_socket->port);
+	memset(&(_socket->address.sin_zero), '\0', 8);
+
+	if (::connect(_socket->socket, (struct sockaddr *) &_socket->address, sizeof(struct sockaddr)) == -1 ) {
+  	  close();
+  	  return false;
+  	}
 
 	return true;
 }

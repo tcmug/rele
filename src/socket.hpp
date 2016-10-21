@@ -2,6 +2,7 @@
 #define SOCKET_HPP
 
 #include <string>
+#include <netdb.h>
 
 namespace rele {
 
@@ -117,7 +118,7 @@ class net_socket {
 			Returns:
 				The number of bytes written
 		*/
-		int write(const std::string &data);
+		virtual int write(const std::string &data);
 
 		/*
 			Function: read
@@ -131,7 +132,7 @@ class net_socket {
 			Returns:
 				The number of bytes read.
 		*/
-		int read(char *buffer, int len);
+		virtual int read(char *buffer, int len);
 
 		/*
 			Function: close
