@@ -13,12 +13,35 @@ class ssl_socket: public net_socket {
 
     private:
 
+        const SSL_METHOD *method;
         SSL *ssl;
-        static SSL_CTX *ssl_ctx;
+        SSL_CTX *ssl_ctx;
+
+
+        /*
+            Function: ssl_init
+            Initialize SSL for this socket.
+
+            Returns:
+                True if success or false if not
+        */
+        bool ssl_init();
 
     public:
 
+
+        /*
+            Constructor: net_socket
+            Initialize the socket.
+        */
         ssl_socket();
+
+
+        /*
+            Destructor: ssl_socket
+            Clean up and destroy the SSL context.
+        */
+        ~ssl_socket();
 
         /*
             Function: write
@@ -46,8 +69,15 @@ class ssl_socket: public net_socket {
         */
         virtual int read(char *buffer, int len);
 
+        /*
+            Function: listen
+            Prepare the socket for <accept>ing incoming connections.
+
+            Parameters:
+                addr - Address to bind the listener on
+                port - Port number to listen on
+        */
         bool connect(const std::string &hostname, int port);
-        void ssl_init();
 };
 
 }

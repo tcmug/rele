@@ -2,12 +2,11 @@
 
 CC = g++
 #INCLUDEDIR =
-CFLAGS = -std=c++11 -Wall -O2 -g $(INC)
-# -I $(INCLUDEDIR)
+CFLAGS = -std=c++11 -Wall -O2 $(INC) -I./local/include
 STATICLIBS =
-LIBS = -L./lib -lpthread
+LIBS = -L./local/lib -L./lib -lpthread -lcrypto -lssl -ltls
 
-LDFLAGS	= -g $(LIBS) $(STATICLIBS)
+LDFLAGS = $(LIBS) $(STATICLIBS)
 
 EXEFLAGS = -lrele
 LIBFLAGS = -shared
@@ -57,7 +56,8 @@ rele:	tmp/main.o \
 		tmp/socket.o \
 		tmp/route.o \
 		tmp/dynamic_source.o \
-		tmp/logger.o
+		tmp/logger.o \
+		tmp/ssl_socket.o
 	$(CC) $(LDFLAGS) $(EXEFLAGS) -o $@ $^
 
 tmp/server_thread.o: src/server_thread.cpp
@@ -78,11 +78,19 @@ tmp/thread.o: src/thread.cpp
 tmp/socket.o: src/socket.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
+tmp/ssl_socket.o: src/ssl_socket.cpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 tmp/dynamic_source.o: src/dynamic_source.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 docs:
 	mkdir -p doc/html && naturaldocs -i src -o HTML doc/html -p doc
+
+tests: test_sockets
+
+test_sockets:
+	$(CC) $(CFLAGS) $(LDFLAGS) -o test_sockets tests/test_sockets.cpp src/ssl_socket.cpp src/socket.cpp
 
 clean:
 	rm -rf rele doc tmp/* lib/*

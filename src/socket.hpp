@@ -47,7 +47,7 @@ class net_socket {
 			Constructor: net_socket
 			Copy constructor.
 		*/
-		~net_socket();
+		virtual ~net_socket();
 
 		/*
 			Function: is_valid
