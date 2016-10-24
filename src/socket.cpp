@@ -9,6 +9,8 @@
 #include "socket.hpp"
 
 
+#include <iostream>
+
 using namespace rele;
 
 
@@ -25,11 +27,9 @@ struct net_socket::s_socket {
 
 
 net_socket::net_socket() {
-
 	this->_socket = new s_socket;
 	this->_socket->socket = -1;
 	memset((char *)&this->_socket->address, 0, sizeof(this->_socket->address));
-
 }
 
 
@@ -52,9 +52,10 @@ net_socket &net_socket::operator = (const net_socket &other) {
 
 
 net_socket::~net_socket() {
-
+	if (this->_socket->socket) {
+		::close(this->_socket->socket);
+	}
 	delete this->_socket;
-
 }
 
 
@@ -107,27 +108,18 @@ void net_socket::set_tcp_nodelay(int val) {
 }
 
 
-net_socket net_socket::accept() {
+net_socket *net_socket::accept() {
 
-	net_socket new_sock;
+	net_socket *new_sock = new net_socket();
 
 	socklen_t len;
 
 	// Accept the new connection
-	new_sock._socket->socket = ::accept(
+	new_sock->_socket->socket = ::accept(
 		this->_socket->socket,
-		(sockaddr*)&new_sock._socket->address,
+		(sockaddr*)&new_sock->_socket->address,
 		&len
 	);
-
-	// struct timeval tv;
-
-	// tv.tv_sec = 1;  /* 30 Secs Timeout */
-	// tv.tv_usec = 0;  // Not init'ing this can cause strange errors
-
-	// if (setsockopt(new_sock._socket->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
-	// 	throw;
-	// }
 
 	return new_sock;
 }
@@ -190,7 +182,7 @@ void net_socket::close() {
 
 net_socket & net_socket::operator << (const std::string &data) {
 	assert(this->_socket->socket > 0);
-	::write(this->_socket->socket, data.c_str(), data.size());
+	write(data);
 	return *this;
 }
 

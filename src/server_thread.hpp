@@ -25,7 +25,7 @@ class server_thread: rele::thread {
 			Variable: client_socket
 			The socket this <server_thread> is serving.
 		*/
-		rele::net_socket client_socket;
+		rele::net_socket *client_socket;
 
 		/*
 			Variable: has_connection
@@ -113,7 +113,7 @@ class server_thread: rele::thread {
 			Parameters:
 				new_socket - The socket to use.
 		*/
-		void process(const rele::net_socket &new_socket);
+		void process(rele::net_socket *new_socket);
 
 		/*
 			Function: client_handler

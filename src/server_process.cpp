@@ -8,15 +8,23 @@
 
 #include "logger.hpp"
 #include "socket.hpp"
+#include "ssl_socket.hpp"
 #include "server_thread.hpp"
 
 using namespace rele;
 
-server_process::server_process(int port) {
+server_process::server_process(int port, bool ssl) {
 
 	this->listen_size = 20;
 
-	this->server_socket.listen("", port);
+	if (ssl) {
+		this->server_socket = new ssl_socket();
+		this->server_socket->listen("", port);
+	}
+	else {
+		this->server_socket = new net_socket();
+		this->server_socket->listen("", port);
+	}
 
 	this->thread_pool_size = 100;
 	this->threads_active.reserve(this->thread_pool_size);
@@ -26,24 +34,22 @@ server_process::server_process(int port) {
 }
 
 server_process::~server_process() {
-
+	delete this->server_socket;
 }
 
 
 
-void http_quick_response(rele::net_socket &sock, const char *code) {
+void http_quick_response(rele::net_socket *sock, const char *code) {
 	char str[2000];
-	sock.read(str, 2000);
+	sock->read(str, 2000);
 	sprintf(str, "HTTP/1.1 %s\r\nContent-Length: 0;\r\n\r\n", code);
-	sock << str;
+	*sock << str;
 }
 
 
 
 
-pthread_mutex_t m_thread_pool;
-int thread_pool_top;
-server_thread **thread_pool;
+
 
 
 void server_process::start() {
@@ -59,16 +65,16 @@ void server_process::start() {
 	while (1) {
 
 		// Accept the new connection
-		rele::net_socket new_socket = this->server_socket.accept();
+		rele::net_socket *new_socket = this->server_socket->accept();
 
-		if (new_socket.is_valid()) {
+		if (new_socket->is_valid()) {
 			server_thread *thread = this->claim_thread();
 			if (thread) {
 				thread->process(new_socket);
 			} else {
 				// Pool is full and we ran out of wait time
 				http_quick_response(new_socket, "408 Request Timeout");
-				new_socket.close();
+				delete new_socket;
 			}
 		}
 	}

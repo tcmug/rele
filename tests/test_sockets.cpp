@@ -8,7 +8,7 @@
 #define BSZ (1000)
 
 int main(int argc, char *argv[]) {
-
+/*
     {
     rele::net_socket connection;
     char buffer[BSZ];
@@ -42,5 +42,40 @@ int main(int argc, char *argv[]) {
         std::cout << "Failed." << std::endl;
     }
     }
+
+
+*/
+
+        std::cout << "SERVER TEST" << std::endl;
+    {
+    rele::ssl_socket server;
+    char buffer[BSZ];
+    std::string request = "GET http://google.com/ HTTP/1.0\r\n\r\n";
+    try {
+    std::cout << "Listen" << std::endl;
+    server.ssl_listen("127.0.0.1", 18443);
+    std::cout << "Server up" << std::endl;
+
+    while (1) {
+        rele::ssl_socket client = server.ssl_accept();
+        std::cout << "Reading" << std::endl;
+        try {
+            client.read(buffer, BSZ);
+            client.write("Hello world\r\n\r\n");
+            std::cout << "Read: <<<START>>>" << buffer << "<<<END>>>" << std::endl;
+        }
+        catch (...) {
+            std::cout << "blah" << std::endl;
+        }
+    }
+
+    }
+    catch (...) {
+
+        std::cout << "BlaH" << std::endl;
+    }
+
+    }
+
 
 }

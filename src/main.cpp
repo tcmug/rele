@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
 	signal(SIGINT, intHandler);
 
-	rele::server_process *p = new rele::server_process(atoi(argv[1]));
+	rele::server_process *p = new rele::server_process(atoi(argv[1]), true);
 
 	p->start();
 

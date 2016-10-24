@@ -12,6 +12,8 @@
 #include "router.hpp"
 #include "dynamic_source.hpp"
 
+#include <assert.h>
+
 using namespace rele;
 
 
@@ -24,7 +26,7 @@ server_thread::server_thread(): thread() {
 
 	this->has_connection = false;
 	this->alive = 1;
-	this->buffer = new byte_buffer(1024); // 1MB
+	this->buffer = new byte_buffer(1024 * 1024); // 1MB
 
 }
 
@@ -32,6 +34,7 @@ server_thread::server_thread(): thread() {
  * Free the server thread
  */
 server_thread::~server_thread() {
+	assert(this->client_socket == 0);
 	delete this->buffer;
 }
 
@@ -70,7 +73,7 @@ void *server_thread::run() {
 /**
  * Invoker for the thread process
  */
-void server_thread::process(const rele::net_socket &new_socket) {
+void server_thread::process(rele::net_socket *new_socket) {
 	// Notify waiting thread for precessing
 	this->client_socket = new_socket;
 
@@ -100,10 +103,10 @@ router *get_router_instance() {
 
 
 // Helper function for reading data to the buffer from the socket.
-int buffer_read_socket(std::vector <char> &buffer, rele::net_socket &socket) {
+int buffer_read_socket(std::vector <char> &buffer, rele::net_socket *socket) {
 	int size = buffer.size();
 	buffer.resize(buffer.capacity());
-	int read = socket.read(&buffer[0], buffer.capacity());
+	int read = socket->read(&buffer[0], buffer.capacity());
 	if (read >= 0) {
 		buffer.resize(size + read);
 	}
@@ -119,7 +122,7 @@ int buffer_shift(std::vector <char> &buffer, int amount) {
 }
 
 // Helper function for reading a single ASCII line from the buffer.
-std::string buffer_read_line(std::vector <char> &buffer, rele::net_socket &client_socket) {
+std::string buffer_read_line(std::vector <char> &buffer, rele::net_socket *client_socket) {
 
 	// Will return or throw an exception
 	while (true) {
@@ -219,11 +222,12 @@ void server_thread::client_handler() {
 	catch (const char *error) {
 		char str[2000];
 		sprintf(str, "HTTP/1.1 %s\r\nContent-Type: text/html\r\nContent-Length: %lu\r\n\r\n%s", error, strlen(error), error);
-		this->client_socket << str;
+		*this->client_socket << str;
 	}
 
-	this->client_socket.close();
-
+	//this->client_socket->close();
+	delete this->client_socket;
+	this->client_socket = NULL;
 }
 
 
@@ -254,8 +258,8 @@ void server_thread::respond(request *req) {
 	log_mutex.unlock();
 
 	// Push out the reply.
-	this->client_socket << res;
-	this->client_socket << contents;
+	*this->client_socket << res;
+	*this->client_socket << contents;
 
 }
 

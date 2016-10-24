@@ -66,7 +66,7 @@ class net_socket {
 				addr - Address to bind the listener on
 				port - Port number to listen on
 		*/
-		void listen(const std::string &addr, int port);
+		virtual void listen(const std::string &addr, int port);
 
 		/*
 			Function: accept
@@ -75,7 +75,7 @@ class net_socket {
 			Returns:
 				A connected <net_socket>
 		*/
-		net_socket accept();
+		virtual net_socket *accept();
 
 		/*
 			Function: connect

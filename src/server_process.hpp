@@ -21,11 +21,14 @@ class server_process {
 
 	private:
 
+		pthread_mutex_t m_thread_pool;
+
+
 		/*
 			Variable: server_socket
 			The socket which accepts incoming connections.
 		*/
-		rele::net_socket server_socket;
+		rele::net_socket *server_socket;
 
 		/*
 			Variable: listen_size
@@ -75,7 +78,7 @@ class server_process {
 			Parameters:
 				port - Port to listen on to.
 		*/
-		server_process(int port);
+		server_process(int port, bool ssl);
 
 		/*
 			Desctructor: ~server_process

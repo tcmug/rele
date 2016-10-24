@@ -3,20 +3,23 @@
 
 #include "socket.hpp"
 
-#include <openssl/crypto.h>
-#include <openssl/ssl.h>
-#include <openssl/err.h>
-
 namespace rele {
 
 class ssl_socket: public net_socket {
 
-    private:
+    protected:
 
-        const SSL_METHOD *method;
-        SSL *ssl;
-        SSL_CTX *ssl_ctx;
+        /*
+            Variable: s_socket
+            C struct socket descriptor.
+        */
+        struct s_ssl;
 
+        /*
+            Variable: _socket
+            The C socket
+        */
+        s_ssl *_ssl;
 
         /*
             Function: ssl_init
@@ -25,7 +28,8 @@ class ssl_socket: public net_socket {
             Returns:
                 True if success or false if not
         */
-        bool ssl_init();
+        bool ssl_client_init();
+        bool ssl_server_init();
 
     public:
 
@@ -41,7 +45,36 @@ class ssl_socket: public net_socket {
             Destructor: ssl_socket
             Clean up and destroy the SSL context.
         */
-        ~ssl_socket();
+        virtual ~ssl_socket();
+
+        /*
+            Function: listen
+            Prepare the socket for <accept>ing incoming connections.
+
+            Parameters:
+                addr - Address to bind the listener on
+                port - Port number to listen on
+        */
+        void listen(const std::string &addr, int port);
+
+        /*
+            Function: accept
+            Wait for and accept a connection.
+
+            Returns:
+                A connected <net_socket>
+        */
+        net_socket *accept();
+
+        /*
+            Function: listen
+            Prepare the socket for <accept>ing incoming connections.
+
+            Parameters:
+                addr - Address to bind the listener on
+                port - Port number to listen on
+        */
+        bool connect(const std::string &hostname, int port);
 
         /*
             Function: write
@@ -68,16 +101,6 @@ class ssl_socket: public net_socket {
                 The number of bytes read.
         */
         virtual int read(char *buffer, int len);
-
-        /*
-            Function: listen
-            Prepare the socket for <accept>ing incoming connections.
-
-            Parameters:
-                addr - Address to bind the listener on
-                port - Port number to listen on
-        */
-        bool connect(const std::string &hostname, int port);
 };
 
 }
