@@ -28,14 +28,12 @@ void intHandler(int n) {
 */
 int main(int argc, char *argv[]) {
 
-	if (argc < 2) {
-		rele::logger::get_instance()->error("ERROR, no port provided");
-		exit(1);
-	}
-
 	signal(SIGINT, intHandler);
+	signal(SIGPIPE, SIG_IGN);
 
-	rele::server_process *p = new rele::server_process(atoi(argv[1]), true);
+	ini conf("rele.ini");
+
+	rele::server_process *p = new rele::server_process(conf);
 
 	p->start();
 

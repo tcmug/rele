@@ -37,15 +37,6 @@ class net_socket {
 		/*
 			Constructor: net_socket
 			Copy constructor.
-
-			Parameters:
-				obj - the socket to copy
-		*/
-   		net_socket(const net_socket &obj);
-
-		/*
-			Constructor: net_socket
-			Copy constructor.
 		*/
 		virtual ~net_socket();
 
@@ -138,7 +129,7 @@ class net_socket {
 			Function: close
 			Close the socket
 		*/
-		void close();
+		virtual void close();
 
 		/*
 			Function: set_reuse_addr

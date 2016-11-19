@@ -146,6 +146,8 @@ std::string buffer_read_line(std::vector <char> &buffer, rele::net_socket *clien
 
 void server_thread::client_handler() {
 
+	assert(client_socket != NULL);
+
 	request req;
 
 	try {
@@ -225,9 +227,9 @@ void server_thread::client_handler() {
 		*this->client_socket << str;
 	}
 
-	//this->client_socket->close();
-	delete this->client_socket;
-	this->client_socket = NULL;
+	delete client_socket;
+	client_socket = NULL;
+
 }
 
 
@@ -268,6 +270,7 @@ void server_thread::respond(request *req) {
 //
 //
 void server_thread::unclaim() {
+
 	this->parent_process->unclaim_thread(this);
 }
 

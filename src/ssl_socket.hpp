@@ -21,6 +21,10 @@ class ssl_socket: public net_socket {
         */
         s_ssl *_ssl;
 
+        std::string ciphers;
+
+        static bool initialized;
+
         /*
             Function: ssl_init
             Initialize SSL for this socket.
@@ -101,6 +105,12 @@ class ssl_socket: public net_socket {
                 The number of bytes read.
         */
         virtual int read(char *buffer, int len);
+
+
+        virtual void close();
+
+        void set_ciphers(const std::string &ciphers);
+        std::string get_ciphers() const;
 };
 
 }

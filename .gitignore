@@ -1,7 +1,12 @@
 # Binaries
 rele
+test_soclets
 tmp
 *.so
+*.crt
+*.csr
+*.pem
+*.key
 routes/tmp
 # Generatables
 doc

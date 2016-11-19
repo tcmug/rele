@@ -10,6 +10,7 @@
 #include "socket.hpp"
 #include "ssl_socket.hpp"
 #include "server_thread.hpp"
+#include "ini.hpp"
 
 using namespace rele;
 
@@ -32,6 +33,31 @@ server_process::server_process(int port, bool ssl) {
 
 	rele::logger::get_instance()->info("Starting server...");
 }
+
+
+
+
+server_process::server_process(const ini &ini) {
+
+	listen_size = ini.get_int("listen_size", 20);
+
+	if (ini.get_int("ssl", 0) == 1) {
+		server_socket = new ssl_socket();
+		server_socket->listen("", ini.get_int("port", 8080));
+		static_cast<ssl_socket*>(server_socket)->set_ciphers(ini.get_string("ciphers", ""));
+	}
+	else {
+		server_socket = new net_socket();
+		server_socket->listen("", ini.get_int("port", 8080));
+	}
+
+	thread_pool_size = ini.get_int("thread_pool", 40);
+	threads_active.reserve(thread_pool_size);
+	threads_passive.reserve(thread_pool_size);
+
+	rele::logger::get_instance()->info("Starting server...");
+}
+
 
 server_process::~server_process() {
 	delete this->server_socket;
@@ -76,6 +102,8 @@ void server_process::start() {
 				http_quick_response(new_socket, "408 Request Timeout");
 				delete new_socket;
 			}
+		} else {
+			std::cout << "Bad socks " << this->threads_active.size() << std::endl;
 		}
 	}
 

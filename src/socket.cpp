@@ -34,14 +34,6 @@ net_socket::net_socket() {
 
 
 
-net_socket::net_socket(const net_socket &other) {
-	this->_socket = new s_socket;
-	printf("copy const\n");
-	memcpy(this->_socket, other._socket, sizeof(net_socket::s_socket));
-}
-
-
-
 
 net_socket &net_socket::operator = (const net_socket &other) {
 	this->_socket = new s_socket;
@@ -52,8 +44,8 @@ net_socket &net_socket::operator = (const net_socket &other) {
 
 
 net_socket::~net_socket() {
-	if (this->_socket->socket) {
-		::close(this->_socket->socket);
+	if (this->_socket->socket != -1) {
+		close();
 	}
 	delete this->_socket;
 }
@@ -83,6 +75,8 @@ void net_socket::listen(const std::string &hostname, int port) {
 	tv.tv_sec = 1;  /* 30 Secs Timeout */
 	tv.tv_usec = 0;  // Not init'ing this can cause strange errors
 
+	int set = 1;
+	setsockopt(this->_socket->socket, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
 	if (setsockopt(this->_socket->socket, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv, sizeof(struct timeval)) < 0) {
 		throw;
 	}
@@ -174,9 +168,11 @@ bool net_socket::connect(const std::string &hostname, int port) {
 
 
 void net_socket::close() {
-	//::shutdown(this->_socket->socket, SHUT_RDWR);
-	::close(this->_socket->socket);
-	this->_socket->socket = -1;
+	if (this->_socket->socket != -1) {
+		std::cout << "Closed SOCKET" << std::endl;
+		::close(this->_socket->socket);
+		this->_socket->socket = -1;
+	}
 }
 
 

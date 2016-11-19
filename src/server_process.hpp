@@ -3,6 +3,7 @@
 
 #include "socket.hpp"
 #include "server_thread.hpp"
+#include "ini.hpp"
 
 #include <vector>
 
@@ -79,6 +80,16 @@ class server_process {
 				port - Port to listen on to.
 		*/
 		server_process(int port, bool ssl);
+
+		/*
+			Constructor: server_prorcess
+			Create and intialize the <server_process>.
+
+			Parameters:
+				conf - Ini configuration
+		*/
+		server_process(const ini &conf);
+
 
 		/*
 			Desctructor: ~server_process

@@ -3,10 +3,6 @@
 
 #include "thread.hpp"
 
-
-#include <pthread.h>
-
-
 using namespace rele;
 
 #include <iostream>
