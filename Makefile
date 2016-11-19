@@ -2,7 +2,7 @@
 
 CC = g++
 #INCLUDEDIR =
-CFLAGS = -std=c++11 -Wall -O2 $(INC) -I./local/include
+CFLAGS = -std=c++11 -O3 -Wall $(INC) -I./local/include
 STATICLIBS =
 LIBS = -L./local/lib -L./lib -lpthread -lcrypto -lssl -ltls
 
@@ -57,7 +57,8 @@ rele:	tmp/main.o \
 		tmp/route.o \
 		tmp/dynamic_source.o \
 		tmp/logger.o \
-		tmp/ssl_socket.o
+		tmp/ssl_socket.o \
+		tmp/ini.o
 	$(CC) $(LDFLAGS) $(EXEFLAGS) -o $@ $^
 
 tmp/server_thread.o: src/server_thread.cpp
@@ -83,6 +84,10 @@ tmp/ssl_socket.o: src/ssl_socket.cpp
 
 tmp/dynamic_source.o: src/dynamic_source.cpp
 	$(CC) $(CFLAGS) -c -o $@ $<
+
+tmp/ini.o: src/ini.cpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 
 docs:
 	mkdir -p doc/html && naturaldocs -i src -o HTML doc/html -p doc
